@@ -1,3 +1,6 @@
+import json
+import os
+
 
 class Threememory:
     def __init__(self,max_term:int=10):
@@ -29,7 +32,8 @@ class Threememory:
 
     def send_memory_to_llm(self):
         part = []
-        part.append(f"历史摘要:{self.summary}")
+        if self.summary:
+            part.append(f"历史摘要:{self.summary}")
         if self.working:
             wk_items = "\n".join(f"{key}: {value}"for key,value in self.working.items())
             part.append(f"当前工作记忆:\n{wk_items}")
@@ -37,4 +41,14 @@ class Threememory:
             sm_items = "\n".join(f"用户:{a[0]}\n助手:{a[1]}" for a in self.short_memory)
             part.append(f"近期对话:\n{sm_items}")
         return "\n".join(part)
+    
+    def save_memory(self,history):
+        with open("history.json","w",encoding = "utf-8") as f1:
+            json.dump(history,f1,ensure_ascii=False,indent=2)
 
+    def read_memory(self):
+        if os.path.exists("history.json"):
+            with open("history.json","r",encoding = "utf-8") as f2:
+                return json.load(f2)
+        else:
+            return []

@@ -110,7 +110,7 @@ def llm_response(prompt:str) ->str:
     )
     return response.choices[0].message.content
 
-def run_agent(user_message:list,memory:Threememory,max_stage:int=5):
+def run_agent(user_message:str,memory:Threememory,span_messages:list = [],max_stage:int=5):
     """
     这是一个简单的React agent
 
@@ -119,12 +119,16 @@ def run_agent(user_message:list,memory:Threememory,max_stage:int=5):
    
     Args:
     user_messages: 用户输入的消息
+    memory:实例对象
     max_stage:循环的最大轮次,可防止死循环
 
     Returns:
     agent的最终回复
     """
+    final_reply = ""
     sys_memory = memory.send_memory_to_llm()
+    if sys_memory != []:
+        sys_memory = span_messages
     messages = [
         {"role": "system", "content":
           f"你是一个有用的 AI 助手。当需要获取最新信息或执行计算时，请使用提供的工具。\n{sys_memory}"},
@@ -138,11 +142,10 @@ def run_agent(user_message:list,memory:Threememory,max_stage:int=5):
             stream = False
         )
         reply = response.choices[0].message
-        messages.append(reply)
+        messages.append(reply.model_dump())
         if not reply.tool_calls:
             final_reply = reply.content
             break
-        tool_call = reply.tool_calls[0]
         for tool_call in reply.tool_calls:
             name = tool_call.function.name
             args = json.loads(tool_call.function.arguments)
@@ -169,6 +172,7 @@ def run_agent(user_message:list,memory:Threememory,max_stage:int=5):
     )
         final_reply = response.choices[0].message.content
     memory.add_conversation(user_message,final_reply)
+    memory.save_memory(messages)
     return final_reply
        
 
