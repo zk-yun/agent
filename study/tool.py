@@ -1,6 +1,10 @@
 from datetime import datetime
 import os
 import requests
+from tavily import TavilyClient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_now_time():
     time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -56,12 +60,9 @@ def search_web(query:str) ->str:
     Returns:
     返回搜索结果
     """
-    search_results = {
-        "Python": "Python是一种流行的编程语言,广泛用于数据科学、人工智能和Web开发。",
-        "OpenAI": "OpenAI是一家人工智能研究公司,致力于推动人工智能技术的发展和应用。",
-        "深度学习": "深度学习是一种机器学习方法,使用多层神经网络来建模复杂的数据模式。"
-    }
-    return search_results.get(query, "抱歉，我没有找到相关的搜索结果。")
+    tavily_client = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
+    response = tavily_client.search(query)
+    return response
 
 def calculate(expression: str) -> str:
     """安全的数学计算工具。
